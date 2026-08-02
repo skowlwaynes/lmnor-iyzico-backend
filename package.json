@@ -1,0 +1,15 @@
+{
+  "name": "lmnor-iyzico-vercel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LMNOR Framer storefront -> iyzico Checkout Form sandbox backend",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "iyzipay": "2.0.69"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
