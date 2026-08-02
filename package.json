@@ -1,12 +1,13 @@
 {
   "name": "lmnor-iyzico-vercel",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "LMNOR Framer storefront -> iyzico Checkout Form sandbox backend",
+  "description": "LMNOR Framer storefront -> iyzico Checkout Form sandbox backend with Neon order storage",
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "@neondatabase/serverless": "1.1.0",
     "iyzipay": "2.0.69"
   },
   "scripts": {
