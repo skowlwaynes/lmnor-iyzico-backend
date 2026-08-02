@@ -1,0 +1,18 @@
+# iyzico Sandbox panelinden alınır. Gerçek değerleri GitHub'a yüklemeyin.
+IYZICO_API_KEY=sandbox-xxxxxxxx
+IYZICO_SECRET_KEY=sandbox-xxxxxxxx
+IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
+IYZICO_MODE=sandbox
+
+# İlk deploy sonrasında Vercel proje adresinizle değiştirin.
+BACKEND_URL=https://YOUR-PROJECT.vercel.app
+
+# Framer'da oluşturacağımız sonuç sayfaları
+FRAMER_SUCCESS_URL=https://lmnor.framer.media/payment-success
+FRAMER_FAILURE_URL=https://lmnor.framer.media/payment-failed
+
+# Virgülle ayrılmış izinli site adresleri
+ALLOWED_ORIGINS=https://lmnor.framer.media,http://localhost:3000
+
+# Rastgele, uzun bir gizli değer oluşturun (en az 32 karakter)
+CALLBACK_SIGNING_SECRET=replace-with-a-long-random-secret
