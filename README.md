@@ -40,3 +40,15 @@ Yanıtta şunlar görünmelidir:
 - Kart bilgileri LMNOR backend'ine gelmez.
 - Fiyatlar yalnızca `lib/catalog.js` içinden hesaplanır.
 - Sipariş takip sorgusu sipariş numarası ve e-posta eşleşmesi ister.
+
+## Sipariş onay e-postası
+
+Ödeme iyzico tarafından doğrulandıktan sonra müşteri adresine Resend üzerinden bir sipariş onay e-postası gönderilir. Gönderim atomik olarak işaretlenir; aynı callback yeniden çalışsa bile aynı sipariş için mükerrer e-posta gönderilmez.
+
+Vercel ortam değişkenleri:
+
+- `RESEND_API_KEY`: Resend API anahtarı
+- `RESEND_FROM`: Test için `LMNOR <onboarding@resend.dev>`; canlıda doğrulanmış alan adınızdan bir gönderici
+- `FRAMER_SITE_URL`: `https://lmnor.framer.media`
+
+`resend.dev` test göndericisi yalnızca Resend hesabınızın e-posta adresine gönderim yapabilir. Gerçek müşteriler için kendi alan adınızı Resend üzerinde doğrulayın.

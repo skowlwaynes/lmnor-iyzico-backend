@@ -9,7 +9,11 @@ const {
   getOrderById,
   markOrderFailed,
   markOrderPaid,
+  claimOrderConfirmationEmail,
+  markOrderConfirmationEmailSent,
+  markOrderConfirmationEmailFailed,
 } = require("../lib/db");
+const { sendOrderConfirmation } = require("../lib/email");
 
 function retrieveCheckoutForm(iyzipay, request) {
   return new Promise((resolve, reject) => {
@@ -108,6 +112,38 @@ module.exports = async function handler(req, res) {
     }
 
     await markOrderPaid(orderId, result);
+
+    // E-posta hatası başarılı ödemeyi bozmasın. Atomik claim, aynı callback'in
+    // tekrar gelmesi durumunda müşteriye mükerrer e-posta gönderilmesini önler.
+    try {
+      const emailOrder = await claimOrderConfirmationEmail(orderId);
+      if (emailOrder) {
+        try {
+          const emailResult = await sendOrderConfirmation(emailOrder);
+          await markOrderConfirmationEmailSent(orderId, emailResult.id);
+          console.log("order confirmation email sent", {
+            orderId,
+            emailId: emailResult.id,
+          });
+        } catch (emailError) {
+          console.error("order confirmation email failed", {
+            orderId,
+            message: emailError?.message,
+            status: emailError?.status,
+            details: emailError?.details,
+          });
+          await markOrderConfirmationEmailFailed(
+            orderId,
+            emailError?.message || "E-posta gönderilemedi."
+          );
+        }
+      }
+    } catch (emailFlowError) {
+      console.error("order confirmation email flow failed", {
+        orderId,
+        message: emailFlowError?.message,
+      });
+    }
 
     return redirectWithParams(res, successUrl, {
       status: "success",
