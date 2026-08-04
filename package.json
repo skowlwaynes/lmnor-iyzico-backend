@@ -1,8 +1,8 @@
 {
   "name": "lmnor-iyzico-vercel",
-  "version": "3.0.0",
+  "version": "4.1.0",
   "private": true,
-  "description": "LMNOR Framer storefront -> iyzico Checkout Form sandbox backend with Neon order storage and Resend order emails",
+  "description": "LMNOR iyzico backend with Neon orders, Resend emails, tracking and secure admin order management",
   "engines": {
     "node": ">=20"
   },
