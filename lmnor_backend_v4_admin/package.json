@@ -1,0 +1,16 @@
+{
+  "name": "lmnor-iyzico-vercel",
+  "version": "4.0.0",
+  "private": true,
+  "description": "LMNOR iyzico backend with Neon orders, Resend emails, tracking and secure admin order management",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.1.0",
+    "iyzipay": "2.0.69"
+  },
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
