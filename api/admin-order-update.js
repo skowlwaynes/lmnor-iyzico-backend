@@ -1,9 +1,22 @@
 const { applyCors, requireAllowedOrigin, parseBody } = require("../lib/common");
 const { requireAdmin } = require("../lib/admin-auth");
-const { updateOrderByAdmin } = require("../lib/db");
+const {
+  updateOrderByAdmin,
+  claimOrderStatusEmail,
+  markOrderStatusEmailSent,
+  markOrderStatusEmailFailed,
+} = require("../lib/db");
+const { sendOrderStatusUpdate } = require("../lib/email");
 
 const ALLOWED_STATUSES = new Set([
   "paid",
+  "preparing",
+  "shipped",
+  "delivered",
+  "cancelled",
+]);
+
+const EMAIL_STATUSES = new Set([
   "preparing",
   "shipped",
   "delivered",
@@ -49,7 +62,8 @@ module.exports = async function handler(req, res) {
     if (status === "shipped" && (!shippingCompany || !trackingNumber)) {
       return res.status(400).json({
         ok: false,
-        error: "Kargoya verildi durumunda kargo firması ve takip numarası gereklidir.",
+        error:
+          "Kargoya verildi durumunda kargo firması ve takip numarası gereklidir.",
       });
     }
 
@@ -67,6 +81,41 @@ module.exports = async function handler(req, res) {
       });
     }
 
+    let email = {
+      attempted: false,
+      sent: false,
+      id: null,
+      error: null,
+    };
+
+    if (EMAIL_STATUSES.has(status)) {
+      const claim = await claimOrderStatusEmail(order.id, status);
+
+      if (claim) {
+        email.attempted = true;
+
+        try {
+          const result = await sendOrderStatusUpdate(order, status);
+          await markOrderStatusEmailSent(order.id, status, result.id);
+          email.sent = true;
+          email.id = result.id;
+        } catch (emailError) {
+          const message =
+            emailError?.message || "Sipariş durum e-postası gönderilemedi.";
+
+          await markOrderStatusEmailFailed(order.id, status, message);
+          email.error = message;
+
+          console.error("order status email failed", {
+            orderId: order.id,
+            status,
+            message,
+            details: emailError?.details || null,
+          });
+        }
+      }
+    }
+
     return res.status(200).json({
       ok: true,
       order: {
@@ -76,6 +125,7 @@ module.exports = async function handler(req, res) {
         trackingNumber: order.tracking_number,
         updatedAt: order.updated_at,
       },
+      email,
     });
   } catch (error) {
     console.error("admin order update error", error);
