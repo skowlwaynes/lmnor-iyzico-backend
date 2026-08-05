@@ -1,8 +1,8 @@
 {
   "name": "lmnor-iyzico-vercel",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "private": true,
-  "description": "LMNOR iyzico backend with Neon orders, Resend emails, tracking, secure admin order management and status emails",
+  "description": "LMNOR iyzico backend with central database pricing, scheduled campaigns, orders, tracking, admin management and Resend emails",
   "engines": {
     "node": ">=20"
   },

@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const { PRODUCTS, ALLOWED_SIZES } = require("../lib/catalog");
+const { ALLOWED_SIZES } = require("../lib/catalog");
 const {
   Iyzipay,
   getIyzipay,
@@ -14,6 +14,7 @@ const {
   createPendingOrder,
   markCheckoutInitialized,
   markOrderFailed,
+  listProducts,
 } = require("../lib/db");
 
 function cleanText(value, maxLength = 180) {
@@ -68,18 +69,20 @@ function normalizeBuyer(input) {
   return buyer;
 }
 
-function buildBasket(cart) {
+async function buildBasket(cart) {
   if (!Array.isArray(cart) || cart.length === 0) {
     throw new Error("Sepet boş.");
   }
 
+  const products = await listProducts();
+  const productMap = new Map(products.map((product) => [product.id, product]));
   const grouped = new Map();
 
   for (const rawItem of cart) {
     const productId = cleanText(rawItem?.productId, 80);
-    const product = PRODUCTS[productId];
+    const product = productMap.get(productId);
     if (!product) {
-      throw new Error(`Geçersiz ürün: ${productId}`);
+      throw new Error(`Geçersiz veya satışa kapalı ürün: ${productId}`);
     }
 
     const size = cleanText(rawItem?.size, 5).toUpperCase();
@@ -96,7 +99,9 @@ function buildBasket(cart) {
     const previous = grouped.get(key) || 0;
     const combinedQuantity = previous + quantity;
     if (combinedQuantity > 5) {
-      throw new Error(`${product.name} / ${size} için toplam adet en fazla 5 olabilir.`);
+      throw new Error(
+        `${product.name} / ${size} için toplam adet en fazla 5 olabilir.`
+      );
     }
     grouped.set(key, combinedQuantity);
   }
@@ -107,8 +112,14 @@ function buildBasket(cart) {
 
   for (const [key, quantity] of grouped.entries()) {
     const [productId, size] = key.split(":");
-    const product = PRODUCTS[productId];
-    const lineTotalKurus = product.priceKurus * quantity;
+    const product = productMap.get(productId);
+    const unitPriceKurus = Number(product.effective_price_kurus);
+
+    if (!Number.isInteger(unitPriceKurus) || unitPriceKurus < 100) {
+      throw new Error(`${product.name} fiyatı geçici olarak kullanılamıyor.`);
+    }
+
+    const lineTotalKurus = unitPriceKurus * quantity;
     totalKurus += lineTotalKurus;
 
     items.push({
@@ -116,8 +127,9 @@ function buildBasket(cart) {
       productName: product.name,
       size,
       quantity,
-      unitPriceKurus: product.priceKurus,
+      unitPriceKurus,
       lineTotalKurus,
+      campaignApplied: Boolean(product.campaign_active),
     });
 
     basketItems.push({
@@ -170,7 +182,7 @@ module.exports = async function handler(req, res) {
 
     const body = parseBody(req);
     const buyer = normalizeBuyer(body.buyer || {});
-    const { basketItems, items, totalKurus } = buildBasket(body.cart);
+    const { basketItems, items, totalKurus } = await buildBasket(body.cart);
 
     orderId = `LMNOR-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
     const signature = createSignedState(orderId);
