@@ -1,5 +1,6 @@
 const { applyCors, requireAllowedOrigin } = require("../lib/common");
 const { listProducts } = require("../lib/db");
+const { serializeStoreConfig } = require("../lib/store-config");
 
 function serializeProduct(product) {
   return {
@@ -42,6 +43,7 @@ module.exports = async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       products: products.map(serializeProduct),
+      storeConfig: serializeStoreConfig(),
       serverTime: new Date().toISOString(),
     });
   } catch (error) {

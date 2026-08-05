@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { ALLOWED_SIZES } = require("../lib/catalog");
+const { calculateShippingKurus } = require("../lib/store-config");
 const {
   Iyzipay,
   getIyzipay,
@@ -106,7 +107,7 @@ async function buildBasket(cart) {
     grouped.set(key, combinedQuantity);
   }
 
-  let totalKurus = 0;
+  let subtotalKurus = 0;
   const items = [];
   const basketItems = [];
 
@@ -120,7 +121,7 @@ async function buildBasket(cart) {
     }
 
     const lineTotalKurus = unitPriceKurus * quantity;
-    totalKurus += lineTotalKurus;
+    subtotalKurus += lineTotalKurus;
 
     items.push({
       productId: product.id,
@@ -142,7 +143,7 @@ async function buildBasket(cart) {
     });
   }
 
-  return { basketItems, items, totalKurus };
+  return { basketItems, items, subtotalKurus };
 }
 
 function initializeCheckout(iyzipay, request) {
@@ -182,13 +183,28 @@ module.exports = async function handler(req, res) {
 
     const body = parseBody(req);
     const buyer = normalizeBuyer(body.buyer || {});
-    const { basketItems, items, totalKurus } = await buildBasket(body.cart);
+    const { basketItems, items, subtotalKurus } = await buildBasket(body.cart);
+    const shippingKurus = calculateShippingKurus(subtotalKurus);
+    const totalKurus = subtotalKurus + shippingKurus;
+
+    if (shippingKurus > 0) {
+      basketItems.push({
+        id: "shipping",
+        name: "Kargo Ücreti",
+        category1: "Kargo",
+        category2: "Aras Kargo",
+        itemType: Iyzipay.BASKET_ITEM_TYPE.PHYSICAL,
+        price: toTry(shippingKurus),
+      });
+    }
 
     orderId = `LMNOR-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`;
     const signature = createSignedState(orderId);
 
     await createPendingOrder({
       id: orderId,
+      subtotalKurus,
+      shippingKurus,
       totalKurus,
       items,
       buyer,

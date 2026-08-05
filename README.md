@@ -1,40 +1,31 @@
-# LMNOR iyzico Backend v5 — Dinamik Fiyat ve Kampanya Yönetimi
+# LMNOR iyzico Backend v6 — Kargo ve Ücretsiz Kargo
 
-Bu sürüm v4.2'nin ödeme, sipariş, takip, yönetim paneli ve durum e-postası özelliklerini korur; ürün fiyatlarını Neon veritabanına taşır.
+Bu sürüm v5 dinamik fiyat ve kampanya sistemini korur; kargo ücretini backend tarafında güvenli biçimde hesaplar.
 
-## Başlangıç normal fiyatları
+## Kargo ayarları
 
-- Lucky Family Old: 999 TL
-- LMNOR JJ: 1099 TL
-- LMNOR Main: 1099 TL
-- LMNOR Waynes Culture: 1099 TL
-- LMNOR Legacy Tee: 1099 TL
+- Kargo firması: Aras Kargo
+- Sabit kargo ücreti: 170 TL
+- Ücretsiz kargo sınırı: 3.000 TL
+- Hazırlık süresi: 2–4 iş günü
 
-Bu fiyatlar `products` tablosu ilk kez oluşturulurken eklenir. Sonraki deployment'lar panelden değiştirilmiş fiyatların üzerine yazmaz.
+Ürün ara toplamı 3.000 TL ve üzerindeyse kargo 0 TL olur. Altındaysa 170 TL eklenir. Checkout'a gönderilen müşteri verisindeki fiyatlara güvenilmez; ürün ve kargo tutarı backend tarafından hesaplanır.
 
-## Yeni API'ler
+## Yeni API
 
-- `GET /api/products` — sitede kullanılacak güncel normal/kampanyalı fiyatları verir.
-- `GET /api/admin-products` — yönetici paneli için tüm fiyat ve kampanya ayarlarını verir.
-- `POST /api/admin-product-update` — normal fiyat, kampanyalı fiyat, başlangıç/bitiş ve açık/kapalı ayarını kaydeder.
+- `GET /api/store-config` — kargo, ücretsiz kargo sınırı ve hazırlık süresini verir.
+- `GET /api/products` yanıtında ayrıca `storeConfig` alanı bulunur.
 
-## Kampanya çalışma mantığı
+## Sipariş verileri
 
-Kampanyanın uygulanması için:
+Siparişlerde ürün ara toplamı, kargo ve genel toplam ayrı tutulur:
 
-- Kampanya açık olmalı.
-- Kampanyalı fiyat normal fiyattan düşük olmalı.
-- Başlangıç tarihi boşsa hemen başlayabilir; doluysa o tarih gelmiş olmalı.
-- Bitiş tarihi boşsa süresiz devam eder; doluysa tarih geçince otomatik biter.
-
-Checkout tutarı müşterinin tarayıcısından alınmaz. Backend ödeme anında veritabanındaki geçerli fiyatı hesaplar ve iyzico'ya onu gönderir.
+- `subtotalKurus`
+- `shippingKurus`
+- `totalKurus`
 
 ## Kurulum
 
 Paketteki dosyaları mevcut GitHub reposunun üzerine yükleyip commit edin. Vercel otomatik deployment oluşturur. Yeni environment variable gerekmez.
 
-Deployment Ready olduktan sonra `/api/products` adresi ürünleri ve güncel fiyatları JSON olarak göstermelidir.
-
-## Önemli
-
-Bu sürüm hâlâ `IYZICO_MODE=sandbox` güvenlik kilidini korur. Gerçek satışa geçmeden canlı iyzico ayarları ve yasal checkout alanları ayrıca tamamlanmalıdır.
+Bu sürüm hâlâ `IYZICO_MODE=sandbox` güvenlik kilidini korur.

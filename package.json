@@ -1,8 +1,8 @@
 {
   "name": "lmnor-iyzico-vercel",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "private": true,
-  "description": "LMNOR iyzico backend with central database pricing, scheduled campaigns, orders, tracking, admin management and Resend emails",
+  "description": "LMNOR iyzico backend with dynamic pricing, fixed/free shipping rules, orders, tracking, admin management and Resend emails",
   "engines": {
     "node": ">=20"
   },

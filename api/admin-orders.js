@@ -50,6 +50,8 @@ module.exports = async function handler(req, res) {
         status: order.status,
         statusLabel: STATUS_LABELS[order.status] || "Sipariş İşleniyor",
         paymentStatus: order.payment_status,
+        subtotalKurus: Number(order.subtotal_kurus ?? order.total_kurus),
+        shippingKurus: Number(order.shipping_kurus || 0),
         totalKurus: Number(order.total_kurus),
         currency: order.currency,
         items: order.items,
